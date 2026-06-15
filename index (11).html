@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마르지 않는 샘물 — 서로의 우물에 물을 부어주는 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Batang:wght@400;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #0a3d5c;
+    --water: #2d7ba8;
+    --water-mid: #4a9bc9;
+    --water-light: #8ec5dd;
+    --shallow: #c8e4ee;
+    --foam: #eaf5f8;
+    --parchment: #f9f4e8;
+    --parchment-deep: #f0e8d0;
+    --ink: #1a2530;
+    --ink-soft: #4a5868;
+    --gold: #b8956a;
+    --gold-deep: #8b6f3e;
+    --shadow: rgba(10, 61, 92, 0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { overflow-x: hidden; }
+  body {
+    font-family: 'Gowun Batang', serif;
+    background: var(--parchment);
+    color: var(--ink);
+    line-height: 1.7;
+    background-image:
+      radial-gradient(circle at 10% 90%, rgba(45, 123, 168, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(184, 149, 106, 0.05) 0%, transparent 40%);
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: 80vh;
+    padding: 4rem 2rem 8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--foam) 0%, var(--shallow) 60%, var(--water-light) 100%);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 20%; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    letter-spacing: 0.35em;
+    color: var(--deep);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    font-size: clamp(2.8rem, 9vw, 6rem);
+    line-height: 1;
+    color: var(--deep);
+    z-index: 1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.5s forwards;
+  }
+  .hero-title em {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--water);
+  }
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--ink-soft);
+    max-width: 540px;
+    z-index: 1;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.8s forwards;
+  }
+  .scripture-block {
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
+    border-left: 3px solid var(--gold);
+    padding: 1.5rem 2rem;
+    max-width: 540px;
+    text-align: left;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 1.2s 1.1s forwards;
+  }
+  .scripture-block p {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 1.05rem;
+    color: var(--deep);
+    line-height: 1.7;
+  }
+  .scripture-block cite {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-deep);
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+  }
+  /* 떨어지는 물방울 장식 */
+  .drop-decor {
+    position: absolute;
+    bottom: 30%;
+    width: 16px; height: 22px;
+    background: rgba(74, 155, 201, 0.5);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    transform: rotate(180deg);
+    animation: drop 3s ease-in infinite;
+  }
+  .drop-decor:nth-child(1) { left: 15%; animation-delay: 0s; }
+  .drop-decor:nth-child(2) { left: 25%; animation-delay: 1s; }
+  .drop-decor:nth-child(3) { right: 20%; animation-delay: 2s; }
+  .drop-decor:nth-child(4) { right: 35%; animation-delay: 0.5s; }
+  @keyframes drop {
+    0% { opacity: 0; transform: rotate(180deg) translateY(-100px); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(180deg) translateY(200px); }
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(20px); }
+  }
+
+  /* ============ NAV ============ */
+  nav.tabs {
+    display: flex;
+    background: var(--deep);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow-x: auto;
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+  nav.tabs button {
+    flex: 1;
+    min-width: 140px;
+    padding: 1.3rem 1rem;
+    background: transparent;
+    color: var(--foam);
+    border: none;
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+  nav.tabs button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--shallow);
+  }
+  nav.tabs button.active {
+    color: var(--water-light);
+    border-bottom-color: var(--water-light);
+  }
+
+  /* ============ PANELS ============ */
+  section.panel { display: none; padding: 4rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+  section.panel.active { display: block; animation: panelIn 0.5s ease-out; }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header { text-align: center; margin-bottom: 3rem; }
+  .section-header .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-deep);
+    letter-spacing: 0.3em;
+    font-size: 0.9rem;
+  }
+  .section-header h2 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--deep);
+    line-height: 1.1;
+    margin: 0.5rem 0;
+  }
+  .section-header p {
+    color: var(--ink-soft);
+    max-width: 600px;
+    margin: 1rem auto 0;
+    font-size: 1.05rem;
+  }
+
+  /* ============ POUR FORM (고민 작성) ============ */
+  .pour-card {
+    max-width: 680px;
+    margin: 0 auto;
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .pour-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--deep), var(--water), var(--water-light));
+  }
+  .pour-card h3 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: var(--deep);
+    margin-bottom: 0.5rem;
+  }
+  .pour-card .lead {
+    color: var(--ink-soft);
+    margin-bottom: 2rem;
+    font-size: 0.98rem;
+  }
+  .form-group { margin-bottom: 1.5rem; }
+  .form-group label {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-deep);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+  }
+  .form-group textarea, .form-group input, .form-group select {
+    width: 100%;
+    padding: 1rem;
+    background: var(--parchment);
+    border: 1.5px solid var(--parchment-deep);
+    border-radius: 10px;
+    font-family: 'Gowun Batang', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    resize: vertical;
+    transition: border-color 0.3s;
+  }
+  .form-group textarea:focus, .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--water);
+  }
+  .form-group textarea { min-height: 140px; line-height: 1.6; }
+  .form-helper {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+    font-style: italic;
+  }
+  .char-count {
+    text-align: right;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.3rem;
+  }
+  .topic-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .topic-tag {
+    padding: 0.45rem 1rem;
+    background: var(--parchment);
+    border: 1.5px solid var(--parchment-deep);
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: 'Gowun Batang', serif;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    transition: all 0.2s;
+  }
+  .topic-tag:hover {
+    border-color: var(--water);
+    color: var(--deep);
+  }
+  .topic-tag.selected {
+    background: var(--water);
+    color: white;
+    border-color: var(--water);
+  }
+  .btn-pour {
+    width: 100%;
+    padding: 1.2rem;
+    background: var(--deep);
+    color: var(--foam);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 1rem;
+  }
+  .btn-pour:hover:not(:disabled) {
+    background: var(--water);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--shadow);
+  }
+  .btn-pour:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* 안내 박스 */
+  .info-box {
+    background: var(--foam);
+    border-left: 3px solid var(--water);
+    padding: 1.2rem 1.5rem;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .info-box strong { color: var(--deep); }
+
+  /* 토스트 */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--deep);
+    color: var(--foam);
+    padding: 1rem 2rem;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px var(--shadow);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 700;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ============ WELLS LIST (고민 카드들) ============ */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+  .filter-bar button {
+    padding: 0.5rem 1.2rem;
+    background: white;
+    border: 1.5px solid var(--parchment-deep);
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: 'Gowun Batang', serif;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    transition: all 0.2s;
+  }
+  .filter-bar button:hover { border-color: var(--water); color: var(--deep); }
+  .filter-bar button.active {
+    background: var(--deep);
+    color: white;
+    border-color: var(--deep);
+  }
+
+  .wells-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .well-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(10, 61, 92, 0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .well-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(10, 61, 92, 0.15);
+  }
+  /* 우물 시각화 - 물이 차오르는 영역 */
+  .well-visual {
+    position: relative;
+    height: 110px;
+    background: var(--parchment);
+    overflow: hidden;
+    border-bottom: 2px solid var(--gold);
+  }
+  .well-water {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, var(--water-mid) 0%, var(--water) 100%);
+    transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .well-water::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    height: 16px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--water-mid) 0px,
+      var(--water-mid) 6px,
+      var(--water-light) 6px,
+      var(--water-light) 12px
+    );
+    border-radius: 50%;
+    opacity: 0.7;
+    animation: wave 3s ease-in-out infinite;
+  }
+  @keyframes wave {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-8px); }
+  }
+  .well-level-text {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--deep);
+    font-weight: 500;
+    font-size: 0.85rem;
+    z-index: 2;
+  }
+  .well-icon {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    z-index: 1;
+    color: white;
+    text-shadow: 0 2px 8px rgba(10, 61, 92, 0.4);
+  }
+  .well-content {
+    padding: 1.3rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .well-topic {
+    display: inline-block;
+    background: var(--parchment-deep);
+    color: var(--gold-deep);
+    padding: 0.2rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    margin-bottom: 0.7rem;
+    align-self: flex-start;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    letter-spacing: 0.1em;
+  }
+  .well-text {
+    font-size: 0.98rem;
+    color: var(--ink);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .well-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--parchment-deep);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .well-author {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+  }
+  .well-drops {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--water);
+    font-weight: 700;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.2rem;
+  }
+  .empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* ============ MODAL (우물 상세 + 물 채우기) ============ */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 37, 48, 0.7);
+    z-index: 500;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--parchment);
+    max-width: 640px;
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    margin: auto;
+  }
+  .modal-header {
+    padding: 2rem 2rem 1.5rem;
+    background: linear-gradient(135deg, var(--deep) 0%, var(--water) 100%);
+    color: white;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.3rem;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.35); }
+  .modal-topic {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 0.3rem 0.9rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    letter-spacing: 0.15em;
+  }
+  .modal-confession {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+    font-family: 'Nanum Myeongjo', serif;
+    white-space: pre-wrap;
+  }
+  .modal-author {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    opacity: 0.85;
+    font-size: 0.95rem;
+  }
+
+  /* 물 채우기 시각화 */
+  .well-big {
+    margin: 2rem auto 0;
+    width: 200px;
+    height: 200px;
+    position: relative;
+  }
+  .well-big-bowl {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border: 4px solid var(--gold);
+    border-radius: 50% 50% 50% 50% / 30% 30% 60% 60%;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1);
+  }
+  .well-big-water {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, var(--water-mid) 0%, var(--water) 70%, var(--deep) 100%);
+    transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .well-big-water::before {
+    content: '';
+    position: absolute;
+    top: -10px; left: -50%;
+    width: 200%; height: 20px;
+    background: var(--water-mid);
+    border-radius: 50%;
+    animation: bigWave 4s ease-in-out infinite;
+  }
+  @keyframes bigWave {
+    0%, 100% { transform: translateX(0) scaleY(1); }
+    50% { transform: translateX(-15px) scaleY(1.2); }
+  }
+  .well-big-level {
+    position: absolute;
+    top: -2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    color: var(--deep);
+    font-size: 1.2rem;
+    white-space: nowrap;
+  }
+  .well-big-level em {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--gold-deep);
+    margin-left: 0.5rem;
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+  .modal-section-title {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--deep);
+    margin: 2rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .modal-section-title::before {
+    content: '';
+    width: 4px; height: 18px;
+    background: var(--water);
+    border-radius: 2px;
+  }
+
+  /* 부어진 물방울들 */
+  .drops-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .drop-item {
+    background: white;
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    border-left: 3px solid var(--water);
+    position: relative;
+  }
+  .drop-item.scripture { border-left-color: var(--gold); background: #fef9ec; }
+  .drop-item.prayer { border-left-color: var(--water); }
+  .drop-item.comfort { border-left-color: var(--water-mid); }
+  .drop-type {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    letter-spacing: 0.15em;
+    font-size: 0.8rem;
+    color: var(--gold-deep);
+    margin-bottom: 0.4rem;
+  }
+  .drop-type.prayer { color: var(--water); }
+  .drop-type.comfort { color: var(--water-mid); }
+  .drop-text {
+    font-size: 0.98rem;
+    color: var(--ink);
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  /* 물 채우기 폼 */
+  .fill-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(10,61,92,0.06);
+  }
+  .drop-type-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .drop-type-btn {
+    flex: 1;
+    padding: 0.8rem 0.5rem;
+    background: var(--parchment);
+    border: 1.5px solid var(--parchment-deep);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Gowun Batang', serif;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .drop-type-btn:hover { border-color: var(--water); color: var(--deep); }
+  .drop-type-btn.selected {
+    background: var(--water);
+    color: white;
+    border-color: var(--water);
+  }
+  .fill-form textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.8rem;
+    background: var(--parchment);
+    border: 1.5px solid var(--parchment-deep);
+    border-radius: 8px;
+    font-family: 'Gowun Batang', serif;
+    font-size: 0.98rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+  }
+  .fill-form textarea:focus { outline: none; border-color: var(--water); }
+  .btn-fill {
+    width: 100%;
+    padding: 1rem;
+    background: var(--water);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+  .btn-fill:hover:not(:disabled) {
+    background: var(--deep);
+    transform: translateY(-1px);
+  }
+  .btn-fill:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ============ AI 생성 (물방울 추천) ============ */
+  .btn-ai {
+    width: 100%;
+    padding: 0.7rem;
+    margin-bottom: 0.6rem;
+    background: transparent;
+    color: var(--deep);
+    border: 1.5px dashed var(--water);
+    border-radius: 10px;
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ai:hover:not(:disabled) { background: rgba(74,144,164,0.08); }
+  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-suggestions { display: none; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
+  .ai-suggestions.show { display: flex; }
+  .ai-suggest-item {
+    text-align: left;
+    padding: 0.7rem 0.85rem;
+    background: var(--paper, #f7f1e3);
+    border: 1.5px solid var(--line, #e3dcc9);
+    border-radius: 10px;
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--ink, #3a3327);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ai-suggest-item:hover { border-color: var(--water); background: rgba(74,144,164,0.06); }
+  .ai-suggest-item.picked { border-color: var(--water); background: rgba(74,144,164,0.12); }
+  .ai-note { font-size: 0.78rem; color: var(--ink-soft, #8a8270); font-style: italic; margin-bottom: 0.6rem; }
+  .ai-note.err { color: #b4533a; font-style: normal; }
+
+  /* ============ ABOUT ============ */
+  .about-grid {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+  }
+  .about-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    border-left: 4px solid var(--water);
+    box-shadow: 0 4px 16px rgba(10,61,92,0.06);
+  }
+  .about-card.gold { border-left-color: var(--gold); }
+  .about-card.deep { border-left-color: var(--deep); }
+  .about-card h3 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    color: var(--deep);
+    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
+  }
+  .about-card p {
+    color: var(--ink-soft);
+  }
+  .about-card .accent {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-deep);
+    letter-spacing: 0.15em;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  /* ============ STATS ============ */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+  }
+  @media (max-width: 500px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(10,61,92,0.06);
+  }
+  .stat-card .num {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    color: var(--deep);
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+  .stat-card .label {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    letter-spacing: 0.15em;
+  }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--deep);
+    color: var(--shallow);
+    text-align: center;
+    padding: 3rem 2rem;
+    margin-top: 4rem;
+    border-top: 6px solid var(--water);
+  }
+  footer .verse {
+    font-family: 'Nanum Myeongjo', serif;
+    font-weight: 800;
+    color: var(--water-light);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  footer .ref {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    letter-spacing: 0.2em;
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="drop-decor"></div>
+  <div class="drop-decor"></div>
+  <div class="drop-decor"></div>
+  <div class="drop-decor"></div>
+
+  <div class="hero-eyebrow">— THE LIVING WATER —</div>
+  <h1 class="hero-title">마르지 않는<br><em>샘물</em></h1>
+  <p class="hero-sub">너의 갈증을 익명으로 나누렴.<br>그러면 누군가 보이지 않게 너의 우물에 물을 부어줄 거야.</p>
+  <div class="scripture-block">
+    <p>"내가 주는 물을 마시는 자는 영원히 목마르지 아니하리니<br>내가 주는 물은 그 속에서 영생하도록 솟아나는 샘물이 되리라"</p>
+    <cite>— 요한복음 4장 14절</cite>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-target="pour">갈증 나누기</button>
+  <button class="tab-btn" data-target="wells">우물들 보기</button>
+  <button class="tab-btn" data-target="about">게임 안내</button>
+</nav>
+
+<!-- ============ POUR (갈증 나누기) ============ -->
+<section class="panel active" id="pour">
+  <div class="section-header">
+    <div class="num">PART ONE</div>
+    <h2>너의 우물을 파다</h2>
+    <p>지금 너의 마음에 어떤 갈증이 있니? 누구에게도 말 못 한 그것. 이름을 적지 않아도 괜찮아. 솔직하게, 짧게라도.</p>
+  </div>
+
+  <div class="pour-card">
+    <h3>마음 한가운데, 빈 우물</h3>
+    <p class="lead">사마리아 여인이 우물가에서 예수님께 자기 갈증을 말하지 않으려 했지만, 예수님은 이미 알고 계셨어. 여기서는 누구도 너를 알아낼 수 없어. 그저 너의 마음을 부어내려 봐.</p>
+
+    <div class="info-box">
+      💧 <strong>익명 보장</strong> — 이름은 선택입니다. 비워두면 자동으로 "이름 없는 사마리아 사람"으로 표시됩니다. 같은 이름을 여러 번 쓸 수 있어요.
+    </div>
+
+    <div class="form-group">
+      <label>주제</label>
+      <div class="topic-tags" id="topic-tags">
+        <span class="topic-tag" data-topic="가족">가족</span>
+        <span class="topic-tag" data-topic="친구">친구·관계</span>
+        <span class="topic-tag" data-topic="공부">공부·진로</span>
+        <span class="topic-tag" data-topic="신앙">신앙·하나님</span>
+        <span class="topic-tag" data-topic="자신">자신·정체성</span>
+        <span class="topic-tag" data-topic="감정">감정·우울</span>
+        <span class="topic-tag" data-topic="외로움">외로움</span>
+        <span class="topic-tag" data-topic="기타">기타</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>나의 갈증</label>
+      <textarea id="confession" maxlength="500" placeholder="요즘 가장 마음이 무거운 일은…&#10;&#10;예) 부모님이 자꾸 싸우셔서 집에 있는 게 너무 힘들어. 누구한테 말하기도 부끄럽고…"></textarea>
+      <div class="char-count"><span id="char-count">0</span> / 500</div>
+    </div>
+
+    <div class="form-group">
+      <label>이름 (선택)</label>
+      <input type="text" id="nickname" maxlength="20" placeholder="비워두면 익명으로 표시됩니다">
+      <div class="form-helper">실명, 별명, 또는 비워두기 — 모두 가능합니다.</div>
+    </div>
+
+    <button class="btn-pour" id="btn-pour" onclick="submitConfession()">💧 나의 우물 놓아두기</button>
+  </div>
+</section>
+
+<!-- ============ WELLS (우물들 보기) ============ -->
+<section class="panel" id="wells">
+  <div class="section-header">
+    <div class="num">PART TWO</div>
+    <h2>다른 사람의 우물에 물을 부어주다</h2>
+    <p>여기 모인 우물들은 친구들의 마음이야. 카드를 눌러서 들여다보고, 너의 따뜻한 한마디 한 방울을 부어주렴.</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num" id="stat-wells">0</div>
+      <div class="label">PARSED WELLS</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="stat-drops">0</div>
+      <div class="label">DROPS POURED</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="stat-filled">0</div>
+      <div class="label">WELLS OVERFLOWING</div>
+    </div>
+  </div>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="active" data-filter="all">전체</button>
+    <button data-filter="가족">가족</button>
+    <button data-filter="친구">친구·관계</button>
+    <button data-filter="공부">공부·진로</button>
+    <button data-filter="신앙">신앙·하나님</button>
+    <button data-filter="자신">자신·정체성</button>
+    <button data-filter="감정">감정·우울</button>
+    <button data-filter="외로움">외로움</button>
+    <button data-filter="기타">기타</button>
+  </div>
+
+  <div class="wells-grid" id="wells-grid"></div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="panel" id="about">
+  <div class="section-header">
+    <div class="num">— HOW TO PLAY —</div>
+    <h2>게임 안내</h2>
+    <p>요한복음 4장의 그 우물가, 사마리아 여인이 예수님을 만난 그 장면을 함께 살아보는 시간이에요.</p>
+  </div>
+
+  <div class="about-grid">
+    <div class="about-card deep">
+      <span class="accent">— THE STORY —</span>
+      <h3>사마리아 여인의 우물</h3>
+      <p>예수님은 지치고 목마른 채로 사마리아의 한 우물가에 앉으셨어요. 한 여인이 물을 길으러 왔고, 예수님은 그녀에게 먼저 물을 청하셨어요. 그녀의 다섯 남편, 그녀의 외로움, 그녀의 갈증을 다 아시면서도 그녀를 정죄하지 않으셨어요. 오히려 "내가 주는 물은 그 속에서 영생하도록 솟아나는 샘물이 되리라"고 말씀하셨죠. 그 여인은 물동이를 두고 마을로 달려가 모든 사람에게 외쳤어요 — "내가 행한 모든 일을 내게 말한 사람을 보러 와 보라!"</p>
+    </div>
+
+    <div class="about-card">
+      <span class="accent">— PART ONE —</span>
+      <h3>1단계 · 갈증 나누기</h3>
+      <p>익명으로 너의 마음 속 갈증을 적어 놓아둬. 가족 일이든, 친구 문제든, 공부 부담이든, 신앙의 의심이든 — 누구에게도 말 못 한 그것을 우물에 부어내봐. 사마리아 여인이 다섯 남편의 부끄러움을 가지고 우물가에 왔던 것처럼.</p>
+    </div>
+
+    <div class="about-card">
+      <span class="accent">— PART TWO —</span>
+      <h3>2단계 · 물 부어주기</h3>
+      <p>다른 친구들이 놓아둔 우물을 둘러봐. 그리고 너의 따뜻한 한마디, 떠오르는 말씀, 짧은 기도를 그 우물에 부어줘. 너의 한 방울이 누군가의 마른 마음을 적셔줄 거야. 우물에 물이 차오를수록 카드가 시각적으로 채워져.</p>
+    </div>
+
+    <div class="about-card gold">
+      <span class="accent">— THE POINT —</span>
+      <h3>나눠주는 삶의 첫 경험</h3>
+      <p>"누구든지 내가 주는 물을 마시는 자는 영원히 목마르지 아니하리니." 우리가 받은 그 물을, 그저 갖고만 있지 않고 다른 사람에게 부어주는 것 — 그것이 그리스도인의 삶이에요. 이 게임을 통해, 너는 단순히 친구의 마음을 위로하는 게 아니라, 예수님이 너에게 부어주신 그 물을 흘려보내는 통로가 되는 거야.</p>
+    </div>
+
+    <div class="about-card deep">
+      <span class="accent">— FOR LEADERS —</span>
+      <h3>리더에게 드리는 안내</h3>
+      <p>이 게임은 수련회 첫날 저녁이나 본격 예배 전 분위기를 깊이 있게 잡아주는 도구예요. 학생들이 익명으로 마음을 열 수 있게 충분한 시간을 주세요 (최소 15분). 게임 후, 리더가 우물들을 함께 보며 "오늘 우리 안에 이런 갈증들이 있었구나"라고 공동체 차원에서 받아안아주는 시간이 중요해요. 단, 자해·자살 등 위급 신호가 있으면 즉시 1:1 상담으로 연결해주세요.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-topic" id="m-topic"></div>
+      <div class="modal-confession" id="m-confession"></div>
+      <div class="modal-author" id="m-author"></div>
+    </div>
+    <div class="well-big">
+      <div class="well-big-level"><span id="m-level-text"></span><em id="m-level-pct"></em></div>
+      <div class="well-big-bowl">
+        <div class="well-big-water" id="m-big-water" style="height:0%;"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section-title">부어진 물방울들 (<span id="m-drops-count">0</span>)</div>
+      <div class="drops-list" id="m-drops-list"></div>
+
+      <div class="modal-section-title">너의 한 방울 부어주기</div>
+      <div class="fill-form">
+        <div class="drop-type-row">
+          <button class="drop-type-btn selected" data-type="comfort">💧 위로</button>
+          <button class="drop-type-btn" data-type="prayer">🙏 기도</button>
+          <button class="drop-type-btn" data-type="scripture">📖 말씀</button>
+        </div>
+        <button class="btn-ai" id="btn-ai-gen" onclick="generateDrops()">✨ AI로 여러 개 만들어보기</button>
+        <div class="ai-note" id="ai-note" style="display:none;"></div>
+        <div class="ai-suggestions" id="ai-suggestions"></div>
+        <textarea id="fill-text" maxlength="300" placeholder="네가 외롭지 않다는 걸 알아줘. 나도 비슷한 경험이 있었어…"></textarea>
+        <button class="btn-fill" onclick="fillWell()">우물에 물 부어주기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div class="verse">"내 백성이 두 가지 악을 행하였나니… 생수의 근원되는 나를 버린 것과<br>스스로 웅덩이를 판 것이라"</div>
+  <div class="ref">— JEREMIAH 2:13</div>
+</footer>
+
+<script>
+  // ====================================
+  // CONFIG (Supabase + Gemini)
+  // ====================================
+  const SUPABASE_URL = "https://rtwrsygyhfrktlrjqvsd.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0d3JzeWd5aGZya3RscmpxdnNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTM5MzksImV4cCI6MjA5NjA4OTkzOX0.w2-qKZXuT220LI4vxPsryuOGpkUuZf_-IK1rCITJ3Zs";
+
+  // Gemini 키는 이 파일에 없습니다. Vercel 환경변수 GEMINI_API_KEY 에 저장되어
+  // /api/gemini 서버 함수에서만 사용됩니다. (Supabase anon 키는 공개용이라 그대로 둡니다)
+  const GEMINI_VIA_SERVER = true;
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ====================================
+  // STORAGE (Supabase) — 모든 기기에서 공유
+  // ====================================
+  // 화면용 캐시: [{id, topic, text, nickname, createdAt, drops:[{type,text,at}]}]
+  let wellsCache = [];
+
+  async function fetchWells() {
+    const { data: wells, error: wErr } = await sb
+      .from('wells').select('*').order('created_at', { ascending: false });
+    if (wErr) { console.error(wErr); return wellsCache; }
+
+    const { data: drops, error: dErr } = await sb
+      .from('drops').select('*').order('created_at', { ascending: true });
+    if (dErr) { console.error(dErr); }
+
+    const dropsByWell = {};
+    (drops || []).forEach(d => {
+      (dropsByWell[d.well_id] = dropsByWell[d.well_id] || []).push({
+        type: d.type, text: d.text, at: d.created_at
+      });
+    });
+
+    wellsCache = (wells || []).map(w => ({
+      id: w.id,
+      topic: w.topic,
+      text: w.confession,
+      nickname: w.nickname || '',
+      createdAt: w.created_at,
+      drops: dropsByWell[w.id] || []
+    }));
+    return wellsCache;
+  }
+
+  // 캐시에서 동기적으로 읽기 (렌더 함수들이 사용)
+  function loadWells() { return wellsCache; }
+
+  // ====================================
+  // 상태
+  // ====================================
+  let selectedTopic = '';
+  let currentFilter = 'all';
+  let currentDropType = 'comfort';
+  let openModalId = null;
+
+  // ====================================
+  // 1단계: 갈증 작성
+  // ====================================
+  document.querySelectorAll('.topic-tag').forEach(tag => {
+    tag.onclick = () => {
+      document.querySelectorAll('.topic-tag').forEach(t => t.classList.remove('selected'));
+      tag.classList.add('selected');
+      selectedTopic = tag.dataset.topic;
+    };
+  });
+
+  const confessionInput = document.getElementById('confession');
+  confessionInput.addEventListener('input', () => {
+    document.getElementById('char-count').textContent = confessionInput.value.length;
+  });
+
+  async function submitConfession() {
+    const text = confessionInput.value.trim();
+    const nickname = document.getElementById('nickname').value.trim();
+    if (!text) { showToast('너의 마음을 적어줘'); return; }
+    if (!selectedTopic) { showToast('어떤 주제인지 선택해줘'); return; }
+    if (text.length < 5) { showToast('조금 더 적어줄래?'); return; }
+
+    const btn = document.getElementById('btn-pour');
+    btn.disabled = true;
+
+    const { error } = await sb.from('wells').insert({
+      topic: selectedTopic,
+      confession: text,
+      nickname: nickname || null
+    });
+
+    btn.disabled = false;
+
+    if (error) {
+      console.error(error);
+      showToast('저장 중 문제가 생겼어. 잠시 후 다시 시도해줘.');
+      return;
+    }
+
+    // 폼 리셋
+    confessionInput.value = '';
+    document.getElementById('nickname').value = '';
+    document.getElementById('char-count').textContent = '0';
+    document.querySelectorAll('.topic-tag').forEach(t => t.classList.remove('selected'));
+    selectedTopic = '';
+
+    await fetchWells();
+    showToast('💧 너의 우물이 놓였어. 다른 사람들이 곧 물을 부어줄 거야.');
+    setTimeout(() => switchTab('wells'), 1500);
+  }
+
+  // ====================================
+  // 2단계: 우물 목록
+  // ====================================
+  document.querySelectorAll('.filter-bar button').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderWells();
+    };
+  });
+
+  function getWaterLevel(dropsCount) {
+    // 10방울이 가득. 그 이상이면 100%
+    return Math.min(100, dropsCount * 10);
+  }
+
+  function getLevelLabel(pct) {
+    if (pct === 0) return '바싹 마른 우물';
+    if (pct < 20) return '한 방울 떨어진 우물';
+    if (pct < 50) return '조금씩 채워지는 우물';
+    if (pct < 80) return '맑은 물이 차오르는 우물';
+    if (pct < 100) return '거의 가득한 우물';
+    return '넘쳐 흐르는 샘물';
+  }
+
+  function renderWells() {
+    const wells = loadWells();
+    const grid = document.getElementById('wells-grid');
+    const filtered = currentFilter === 'all' ? wells : wells.filter(w => w.topic === currentFilter);
+
+    // 통계 업데이트
+    const totalDrops = wells.reduce((sum, w) => sum + w.drops.length, 0);
+    const overflowing = wells.filter(w => w.drops.length >= 10).length;
+    document.getElementById('stat-wells').textContent = wells.length;
+    document.getElementById('stat-drops').textContent = totalDrops;
+    document.getElementById('stat-filled').textContent = overflowing;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state">
+        <div class="icon">🪣</div>
+        ${wells.length === 0
+          ? '<p>아직 놓아둔 우물이 없어요.<br>첫 번째 우물이 되어 주세요.</p>'
+          : '<p>이 주제에는 아직 우물이 없어요.</p>'}
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(w => {
+      const level = getWaterLevel(w.drops.length);
+      const author = w.nickname ? escapeHtml(w.nickname) : '이름 없는 사마리아 사람';
+      return `
+        <div class="well-card" onclick="openModal('${w.id}')">
+          <div class="well-visual">
+            <div class="well-water" style="height:${level}%;"></div>
+            <div class="well-icon">🪣</div>
+            <div class="well-level-text">${level}%</div>
+          </div>
+          <div class="well-content">
+            <span class="well-topic">${escapeHtml(w.topic)}</span>
+            <div class="well-text">${escapeHtml(w.text)}</div>
+            <div class="well-footer">
+              <span class="well-author">— ${author}</span>
+              <span class="well-drops">💧 ${w.drops.length}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ====================================
+  // 모달 (우물 상세 + 물 채우기)
+  // ====================================
+  function openModal(id) {
+    const wells = loadWells();
+    const w = wells.find(x => x.id === id);
+    if (!w) return;
+    openModalId = id;
+
+    document.getElementById('m-topic').textContent = w.topic;
+    document.getElementById('m-confession').textContent = w.text;
+    document.getElementById('m-author').textContent = '— ' + (w.nickname || '이름 없는 사마리아 사람');
+
+    const level = getWaterLevel(w.drops.length);
+    document.getElementById('m-level-text').textContent = getLevelLabel(level);
+    document.getElementById('m-level-pct').textContent = level + '%';
+    setTimeout(() => {
+      document.getElementById('m-big-water').style.height = level + '%';
+    }, 100);
+
+    renderDrops(w.drops);
+
+    document.getElementById('fill-text').value = '';
+    document.querySelectorAll('.drop-type-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector('.drop-type-btn[data-type="comfort"]').classList.add('selected');
+    currentDropType = 'comfort';
+    clearAiSuggestions();
+
+    document.getElementById('modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('show');
+    document.body.style.overflow = '';
+    openModalId = null;
+    renderWells();
+  }
+
+  document.getElementById('modal').onclick = (e) => {
+    if (e.target.id === 'modal') closeModal();
+  };
+
+  function renderDrops(drops) {
+    const list = document.getElementById('m-drops-list');
+    document.getElementById('m-drops-count').textContent = drops.length;
+    if (drops.length === 0) {
+      list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:var(--ink-soft); font-style:italic; font-family:Cormorant Garamond, serif;">아직 부어진 물방울이 없어요. 너가 첫 한 방울이 되어줘.</div>';
+      return;
+    }
+    const typeLabel = { comfort: '위로', prayer: '기도', scripture: '말씀' };
+    list.innerHTML = drops.slice().reverse().map(d => `
+      <div class="drop-item ${d.type}">
+        <div class="drop-type ${d.type}">— ${typeLabel[d.type]} 한 방울 —</div>
+        <div class="drop-text">${escapeHtml(d.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  document.querySelectorAll('.drop-type-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.drop-type-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      currentDropType = btn.dataset.type;
+      clearAiSuggestions();
+    };
+  });
+
+  async function fillWell() {
+    if (!openModalId) return;
+    const text = document.getElementById('fill-text').value.trim();
+    if (!text) { showToast('한 마디 적어줘'); return; }
+    if (text.length < 3) { showToast('조금 더 적어줄래?'); return; }
+
+    const fillBtn = document.querySelector('.btn-fill');
+    fillBtn.disabled = true;
+
+    const { error } = await sb.from('drops').insert({
+      well_id: openModalId,
+      type: currentDropType,
+      text: text
+    });
+
+    fillBtn.disabled = false;
+
+    if (error) {
+      console.error(error);
+      showToast('물방울을 넣는 중 문제가 생겼어. 다시 시도해줘.');
+      return;
+    }
+
+    await fetchWells();
+    const w = wellsCache.find(x => x.id === openModalId);
+    if (w) {
+      const level = getWaterLevel(w.drops.length);
+      document.getElementById('m-level-text').textContent = getLevelLabel(level);
+      document.getElementById('m-level-pct').textContent = level + '%';
+      document.getElementById('m-big-water').style.height = level + '%';
+      renderDrops(w.drops);
+      if (w.drops.length === 10) {
+        showToast('🌊 우물이 가득 찼어! 너의 물방울이 마지막을 채웠어.');
+      } else {
+        showToast('💧 따뜻한 한 방울 고마워.');
+      }
+    }
+    document.getElementById('fill-text').value = '';
+    clearAiSuggestions();
+  }
+
+  // ====================================
+  // AI 물방울 생성 (Gemini)
+  // ====================================
+  function clearAiSuggestions() {
+    const box = document.getElementById('ai-suggestions');
+    box.innerHTML = '';
+    box.classList.remove('show');
+    const note = document.getElementById('ai-note');
+    note.style.display = 'none';
+    note.className = 'ai-note';
+  }
+
+  function setAiNote(msg, isErr) {
+    const note = document.getElementById('ai-note');
+    note.textContent = msg;
+    note.style.display = 'block';
+    note.className = 'ai-note' + (isErr ? ' err' : '');
+  }
+
+  function pickSuggestion(el, text) {
+    document.querySelectorAll('.ai-suggest-item').forEach(i => i.classList.remove('picked'));
+    el.classList.add('picked');
+    document.getElementById('fill-text').value = text;
+  }
+
+  async function generateDrops() {
+    if (!openModalId) return;
+    const w = wellsCache.find(x => x.id === openModalId);
+    if (!w) return;
+
+    const btn = document.getElementById('btn-ai-gen');
+    btn.disabled = true;
+    clearAiSuggestions();
+    setAiNote('AI가 추천을 만들고 있어요…', false);
+
+    const typeGuide = {
+      comfort: '따뜻하고 진심 어린 위로의 말. 판단하지 않고 곁에 있어주는 한국어 또래 친구의 말투.',
+      prayer: '이 사람을 위한 짧고 진솔한 기도문. 하나님께 드리는 1~2문장 기도.',
+      scripture: '이 상황에 어울리는 성경 말씀. 반드시 실제 성경 구절을 정확한 출처(예: 시편 23:4)와 함께. 한국어 개역개정 기준으로.'
+    };
+    const typeName = { comfort: '위로', prayer: '기도', scripture: '말씀' };
+
+    const prompt =
+      '너는 한국 교회 청소년부 수련회에서 친구의 고민에 따뜻하게 반응하는 또래야.\n' +
+      '아래 [고민]을 읽고, "' + typeName[currentDropType] + '" 유형의 짧은 메시지 3개를 만들어줘.\n' +
+      '유형 설명: ' + typeGuide[currentDropType] + '\n' +
+      '규칙:\n' +
+      '- 각 메시지는 한국어로, 2~3문장 이내로 짧게.\n' +
+      '- 서로 다른 표현/관점으로 3개.\n' +
+      (currentDropType === 'scripture'
+        ? '- 말씀은 지어내지 말고 실제 존재하는 구절만. 형식: "구절 내용" (출처). 사람을 정죄하지 않는 위로/소망의 구절로.\n'
+        : '- 절대 정죄하거나 가르치려 들지 말고, 진심으로 곁에 있어주는 느낌으로.\n') +
+      '- 반드시 아래 JSON 형식만 출력. 코드블록이나 설명 없이 순수 JSON만.\n' +
+      '{ "options": ["메시지1", "메시지2", "메시지3"] }\n\n' +
+      '[고민]\n주제: ' + w.topic + '\n내용: ' + w.text;
+
+    try {
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt, temperature: 0.9, jsonMode: true })
+      });
+
+      if (!res.ok) {
+        let detail = '';
+        try { const e = await res.json(); detail = e.error || ''; } catch (e) {}
+        if (res.status === 429) setAiNote('요청이 많아 잠시 막혔어요. 1~2분 뒤 다시 시도해줘.', true);
+        else setAiNote('생성 실패: ' + (detail || ('오류 ' + res.status)), true);
+        btn.disabled = false;
+        return;
+      }
+
+      const json = await res.json();
+      let text = json.text || '';
+      const clean = (text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+      let result;
+      try { result = JSON.parse(clean); }
+      catch (e) { const m = clean.match(/\{[\s\S]*\}/); if (m) { try { result = JSON.parse(m[0]); } catch (e2) {} } }
+
+      const options = result && Array.isArray(result.options) ? result.options.filter(Boolean) : [];
+      if (!options.length) {
+        setAiNote('추천을 만들지 못했어요. 다시 시도해줘.', true);
+        btn.disabled = false;
+        return;
+      }
+
+      const box = document.getElementById('ai-suggestions');
+      box.innerHTML = options.map(opt =>
+        '<button type="button" class="ai-suggest-item" onclick="pickSuggestion(this, this.dataset.text)" data-text="' +
+        escapeHtml(opt).replace(/"/g, '&quot;') + '">' + escapeHtml(opt) + '</button>'
+      ).join('');
+      box.classList.add('show');
+      setAiNote('마음에 드는 걸 고르면 아래 칸에 들어가요. 직접 고쳐도 돼요.', false);
+    } catch (e) {
+      console.error(e);
+      setAiNote('네트워크 오류가 났어요. 인터넷 연결을 확인해줘.', true);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ====================================
+  // TABS
+  // ====================================
+  function switchTab(target) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.tab-btn[data-target="${target}"]`).classList.add('active');
+    document.getElementById(target).classList.add('active');
+    if (target === 'wells') { renderWells(); refreshFromServer(); }
+    window.scrollTo({ top: document.querySelector('nav.tabs').offsetTop, behavior: 'smooth' });
+  }
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.target);
+  });
+
+  // ====================================
+  // UTILS
+  // ====================================
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+
+  // 초기 로드 + 자동 새로고침 (다른 기기의 변화 반영)
+  async function refreshFromServer() {
+    await fetchWells();
+    // 우물 목록 탭이 보일 때만 다시 그림
+    if (document.getElementById('wells').classList.contains('active')) {
+      renderWells();
+    }
+    // 모달이 열려 있으면 그 우물의 물방울도 갱신
+    if (openModalId) {
+      const w = wellsCache.find(x => x.id === openModalId);
+      if (w) {
+        const level = getWaterLevel(w.drops.length);
+        document.getElementById('m-level-text').textContent = getLevelLabel(level);
+        document.getElementById('m-level-pct').textContent = level + '%';
+        document.getElementById('m-big-water').style.height = level + '%';
+        renderDrops(w.drops);
+      }
+    }
+  }
+
+  (async function init() {
+    await fetchWells();
+    renderWells();
+    // 5초마다 서버에서 최신 상태를 가져와 다른 사람의 우물/물방울을 반영
+    setInterval(refreshFromServer, 5000);
+  })();
+</script>
+
+</body>
+</html>
